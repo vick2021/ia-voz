@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>IA Voz</title>
+
+    <style>
+        body {
+            background: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 25px;
+        }
+
+        h1 {
+            font-size: 36px;
+        }
+
+        #estado {
+            font-size: 18px;
+            margin: 20px;
+        }
+
+        #hablar {
+            background: #e53935;
+            color: white;
+            width: 180px;
+            height: 100px;
+            font-size: 22px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        textarea {
+            display: block;
+            box-sizing: border-box;
+            width: 95%;
+            max-width: 700px;
+            height: 250px;
+            margin: 25px auto;
+            padding: 20px;
+            font-size: 20px;
+            border-radius: 15px;
+        }
+
+        .acciones button {
+            font-size: 17px;
+            padding: 14px 18px;
+            margin: 5px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🎙️ IA Voz</h1>
+
+    <p id="estado">Presiona HABLAR</p>
+
+    <button id="hablar">🎙️ HABLAR</button>
+
+    <textarea id="texto" placeholder="Aquí aparecerá lo que digas..."></textarea>
+
+    <div class="acciones">
+        <button id="leer">🔊 LEER</button>
+        <button id="guardar">💾 GUARDAR</button>
+        <button id="borrar">🗑️ BORRAR</button>
+    </div>
+
+
+    <script>
+
+        // ELEMENTOS
+
+        const botonHablar = document.getElementById("hablar");
+        const botonLeer = document.getElementById("leer");
+        const botonGuardar = document.getElementById("guardar");
+        const botonBorrar = document.getElementById("borrar");
+
+        const texto = document.getElementById("texto");
+        const estado = document.getElementById("estado");
+
+
+        // RECUPERAR TEXTO GUARDADO
+
+        const guardado = localStorage.getItem("iaVozTexto");
+
+        if (guardado) {
+            texto.value = guardado;
+        }
+
+
+        // RECONOCIMIENTO DE VOZ
+
+        const SpeechRecognition =
+            window.SpeechRecognition ||
+            window.webkitSpeechRecognition;
+
+
+        if (!SpeechRecognition) {
+
+            estado.textContent =
+                "Este navegador no soporta reconocimiento de voz.";
+
+            botonHablar.disabled = true;
+
+        } else {
+
+            const reconocimiento =
+                new SpeechRecognition();
+
+            reconocimiento.lang = "es-MX";
+
+            reconocimiento.continuous = false;
+
+            reconocimiento.interimResults = true;
+
+
+            reconocimiento.onstart = function () {
+
+                estado.textContent = "🎧 Escuchando...";
+
+                botonHablar.textContent =
+                    "🔴 HABLA";
+
+            };
+
+
+            reconocimiento.onresult = function (event) {
+
+                for (
+                    let i = event.resultIndex;
+                    i < event.results.length;
+                    i++
+                ) {
+
+                    // Solamente agregamos resultados definitivos
+
+                    if (event.results[i].isFinal) {
+
+                        const frase =
+                            event.results[i][0]
+                                .transcript
+                                .trim();
+
+                        if (frase !== "") {
+
+                            if (texto.value.trim() !== "") {
+                                texto.value += " ";
+                            }
+
+                            texto.value += frase;
+                        }
+                    }
+                }
+            };
+
+
+            reconocimiento.onend = function () {
+
+                estado.textContent =
+                    "Listo. Presiona HABLAR para continuar.";
+
+                botonHablar.textContent =
+                    "🎙️ HABLAR";
+
+            };
+
+
+            reconocimiento.onerror = function (event) {
+
+                estado.textContent =
+                    "Error: " + event.error;
+
+                botonHablar.textContent =
+                    "🎙️ HABLAR";
+
+            };
+
+
+            botonHablar.addEventListener(
+                "click",
+                function () {
+
+                    try {
+
+                        reconocimiento.start();
+
+                    } catch (error) {
+
+                        console.log(error);
+
+                    }
+                }
+            );
+        }
+
+
+        // LEER TEXTO
+
+        botonLeer.addEventListener(
+            "click",
+            function () {
+
+                const contenido =
+                    texto.value.trim();
+
+                if (contenido === "") {
+
+                    estado.textContent =
+                        "No hay texto para leer.";
+
+                    return;
+                }
+
+                speechSynthesis.cancel();
+
+                const voz =
+                    new SpeechSynthesisUtterance(
+                        contenido
+                    );
+
+                voz.lang = "es-MX";
+
+                voz.rate = 1;
+
+                voz.onstart = function () {
+
+                    estado.textContent =
+                        "🔊 Leyendo...";
+
+                };
+
+                voz.onend = function () {
+
+                    estado.textContent =
+                        "Lectura terminada.";
+
+                };
+
+                speechSynthesis.speak(voz);
+
+            }
+        );
+
+
+        // GUARDAR
+
+        botonGuardar.addEventListener(
+            "click",
+            function () {
+
+                const contenido =
+                    texto.value.trim();
+
+                if (contenido === "") {
+
+                    estado.textContent =
+                        "⚠️ No hay nada para guardar.";
+
+                    return;
+                }
+
+                localStorage.setItem(
+                    "iaVozTexto",
+                    contenido
+                );
+
+                estado.textContent =
+                    "💾 Texto guardado correctamente.";
+
+            }
+        );
+
+
+        // BORRAR
+
+        botonBorrar.addEventListener(
+            "click",
+            function () {
+
+                texto.value = "";
+
+                localStorage.removeItem(
+                    "iaVozTexto"
+                );
+
+                estado.textContent =
+                    "Texto borrado. Presiona HABLAR.";
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
