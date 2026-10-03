@@ -74,6 +74,7 @@
         <button id="guardar">💾 GUARDAR</button>
         <button id="borrar">🗑️ BORRAR</button>
         <button id="notas">📚 MIS NOTAS</button>
+        <button id="compartir">✉️ COMPARTIR</button>
 
     </div>
     <div id="listaNotas"></div>
@@ -91,6 +92,9 @@
         const listaNotas = document.getElementById("listaNotas");
         const texto = document.getElementById("texto");
         const estado = document.getElementById("estado");
+        const botonCompartir = document.getElementById("compartir");
+
+
 
 
         // RECUPERAR TEXTO GUARDADO
@@ -331,6 +335,54 @@
 
         });
 
+        // COMPARTIR
+        botonCompartir.addEventListener("click", async function () {
+
+            const contenido = texto.value.trim();
+
+            if (contenido === "") {
+                estado.textContent = "⚠️ No hay ningún mensaje para compartir.";
+                return;
+            }
+
+            // En teléfonos compatibles abre el menú de compartir
+            if (navigator.share) {
+
+                try {
+
+                    await navigator.share({
+                        text: contenido
+                    });
+
+                    estado.textContent = "✉️ Mensaje compartido.";
+
+                } catch (error) {
+
+                    // Si el usuario cerró el menú, no es un fallo grave
+                    estado.textContent = "Compartir cancelado.";
+
+                }
+
+            } else {
+
+                // En computadoras/navegadores sin compartir:
+                // copia el mensaje al portapapeles
+                try {
+
+                    await navigator.clipboard.writeText(contenido);
+
+                    estado.textContent =
+                        "📋 Mensaje copiado. Ya puedes pegarlo.";
+
+                } catch (error) {
+
+                    estado.textContent =
+                        "Este navegador no permite compartir directamente.";
+
+                }
+            }
+
+        });
 
 
     </script>
