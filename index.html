@@ -333,6 +333,41 @@
                 nota.style.textAlign = "left";
 
                 nota.textContent = "📝 Nota " + (indice + 1) + ": " + contenido;
+                const botonEliminar = document.createElement("button");
+                botonEliminar.textContent = "🗑️ BORRAR";
+                botonEliminar.style.marginTop = "15px";
+
+                botonEliminar.addEventListener("click", function () {
+                    notas.splice(indice, 1);
+
+                    localStorage.setItem(
+                        "iaVozNotas",
+                        JSON.stringify(notas)
+                    );
+
+                    nota.remove();
+                });
+                const botonCompartir = document.createElement("button");
+                botonCompartir.textContent = "📤 COMPARTIR";
+                botonCompartir.style.marginTop = "15px";
+                botonCompartir.style.marginRight = "10px";
+
+                botonCompartir.addEventListener("click", async function () {
+                    if (navigator.share) {
+                        try {
+                            await navigator.share({
+                                text: contenido
+                            });
+                        } catch (error) {
+                            console.log("Compartir cancelado");
+                        }
+                    } else {
+                        await navigator.clipboard.writeText(contenido);
+                        estado.textContent = "📋 Mensaje copiado.";
+                    }
+                });
+                nota.appendChild(botonCompartir);
+                nota.appendChild(botonEliminar);
 
                 listaNotas.appendChild(nota);
             });
