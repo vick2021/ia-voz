@@ -74,7 +74,6 @@
         <button id="guardar">💾 GUARDAR</button>
         <button id="borrar">🗑️ BORRAR</button>
         <button id="notas">📚 MIS NOTAS</button>
-        <button id="compartir">✉️ COMPARTIR</button>
 
     </div>
     <div id="listaNotas"></div>
@@ -92,9 +91,6 @@
         const listaNotas = document.getElementById("listaNotas");
         const texto = document.getElementById("texto");
         const estado = document.getElementById("estado");
-        const botonCompartir = document.getElementById("compartir");
-
-
 
 
         // RECUPERAR TEXTO GUARDADO
@@ -277,10 +273,16 @@
                     return;
                 }
 
+                let notas = JSON.parse(localStorage.getItem("iaVozNotas")) || [];
+
+                notas.push(contenido);
+
                 localStorage.setItem(
-                    "iaVozTexto",
-                    contenido
+                    "iaVozNotas",
+                    JSON.stringify(notas)
                 );
+
+
 
                 estado.textContent =
                     "💾 Texto guardado correctamente.";
@@ -308,81 +310,38 @@
         );
         botonNotas.addEventListener("click", function () {
 
-            const contenido = localStorage.getItem("iaVozTexto");
+            const notas =
+                JSON.parse(localStorage.getItem("iaVozNotas")) || [];
 
             listaNotas.innerHTML = "";
 
-            if (!contenido) {
-
+            if (notas.length === 0) {
                 listaNotas.innerHTML =
-                    "<p>📭 Todavía no tienes notas guardadas.</p>";
-
+                    "<p>📝 Todavía no tienes notas guardadas.</p>";
                 return;
             }
 
-            const nota = document.createElement("div");
+            notas.forEach(function (contenido, indice) {
 
-            nota.style.margin = "25px auto";
-            nota.style.padding = "20px";
-            nota.style.maxWidth = "650px";
-            nota.style.background = "#222";
-            nota.style.borderRadius = "15px";
-            nota.style.textAlign = "left";
+                const nota = document.createElement("div");
 
-            nota.textContent = contenido;
+                nota.style.margin = "25px auto";
+                nota.style.padding = "20px";
+                nota.style.maxWidth = "650px";
+                nota.style.background = "#222";
+                nota.style.borderRadius = "15px";
+                nota.style.textAlign = "left";
 
-            listaNotas.appendChild(nota);
+                nota.textContent = "📝 Nota " + (indice + 1) + ": " + contenido;
 
-        });
+                listaNotas.appendChild(nota);
+            });
 
-        // COMPARTIR
-        botonCompartir.addEventListener("click", async function () {
 
-            const contenido = texto.value.trim();
-
-            if (contenido === "") {
-                estado.textContent = "⚠️ No hay ningún mensaje para compartir.";
-                return;
-            }
-
-            // En teléfonos compatibles abre el menú de compartir
-            if (navigator.share) {
-
-                try {
-
-                    await navigator.share({
-                        text: contenido
-                    });
-
-                    estado.textContent = "✉️ Mensaje compartido.";
-
-                } catch (error) {
-
-                    // Si el usuario cerró el menú, no es un fallo grave
-                    estado.textContent = "Compartir cancelado.";
-
-                }
-
-            } else {
-
-                // En computadoras/navegadores sin compartir:
-                // copia el mensaje al portapapeles
-                try {
-
-                    await navigator.clipboard.writeText(contenido);
-
-                    estado.textContent =
-                        "📋 Mensaje copiado. Ya puedes pegarlo.";
-
-                } catch (error) {
-
-                    estado.textContent =
-                        "Este navegador no permite compartir directamente.";
-
-                }
-            }
 
         });
+
+
 
 
     </script>
